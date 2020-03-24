@@ -7,7 +7,16 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 8    #create 8 bytes of ram
+        self.reg = [0] * 8    #create 8 registers
+        self.pc = 0           #program counter set to 0
+        
+    def ram_read(self, value):
+        return(self.ram[value])
+
+    def ram_write(self, value, address):
+        self.ram[address] = value
+
 
     def load(self):
         """Load a program into memory."""
@@ -62,4 +71,34 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        # set running variable
+        running = True
+        while running:
+            #load the current command
+            instruction = self.ram[self.pc]
+
+            #check if it is the halt
+            if instruction == 0b00000001:
+                running = False
+                self.pc += 1
+            
+            elif instruction == 0b10000010:
+                #one RAM entries out determines which registrar is loaded
+                reg_slot = self.ram_read(self.pc + 1)
+                #two ram entries out determines what value is loaded
+                int_value = self.ram_read(self.pc + 2)
+                
+                self.reg[reg_slot] = int_value
+                #the program counter is set 3 entries ahead
+
+                self.pc += 3
+
+            elif instruction == 0b01000111:
+                 reg_slot = self.ram_read(self.pc + 1)
+                 print(self.reg[reg_slot])
+                 self.pc += 2
+            else:
+                print("I do not recognize that command")
+                print(f"You are currently at Program Counter value: {self.pc}")
+                print(f"The command issued was: {self.ram_read(self.pc)}")
+                sys.exit(1)
