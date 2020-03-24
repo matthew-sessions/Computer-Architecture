@@ -7,10 +7,14 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        self.ram = [0] * 8    #create 8 bytes of ram
+        self.ram = [0] * 255    #create 8 bytes of ram
         self.reg = [0] * 8    #create 8 registers
         self.pc = 0           #program counter set to 0
-        
+        self.LDI = 0b10000010
+        self.PRN = 0b01000111
+        self.HLT = 0b00000001
+        self.MUL = 0b10100010
+
     def ram_read(self, value):
         return(self.ram[value])
 
@@ -18,22 +22,22 @@ class CPU:
         self.ram[address] = value
 
 
-    def load(self):
+    def load(self, program):
         """Load a program into memory."""
 
         address = 0
 
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010, # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111, # PRN R0
+        #     0b00000000,
+        #     0b00000001, # HLT
+        # ]
 
         for instruction in program:
             self.ram[address] = instruction
@@ -74,15 +78,16 @@ class CPU:
         # set running variable
         running = True
         while running:
+            
             #load the current command
             instruction = self.ram[self.pc]
 
             #check if it is the halt
-            if instruction == 0b00000001:
+            if instruction == self.HLT:
                 running = False
                 self.pc += 1
             
-            elif instruction == 0b10000010:
+            elif instruction == self.LDI:
                 #one RAM entries out determines which registrar is loaded
                 reg_slot = self.ram_read(self.pc + 1)
                 #two ram entries out determines what value is loaded
@@ -93,10 +98,16 @@ class CPU:
 
                 self.pc += 3
 
-            elif instruction == 0b01000111:
+            elif instruction == self.PRN:
                  reg_slot = self.ram_read(self.pc + 1)
                  print(self.reg[reg_slot])
                  self.pc += 2
+
+            elif instruction == self.MUL:
+                reg0 = self.reg[self.ram[self.pc + 1]]
+                reg1 = self.reg[self.ram[self.pc + 2]]
+                print(reg0 * reg1)
+                self.pc += 3
             else:
                 print("I do not recognize that command")
                 print(f"You are currently at Program Counter value: {self.pc}")
